@@ -1,0 +1,29 @@
+# ============================================================
+#  .gitignore - Pousada Aconchego
+#  Arquivos que NUNCA devem ir para o GitHub
+# ==============================================
+
+# ---- Dependencias (muito pesadas; o servidor instala com npm install) =====
+node_modules/
+**/node_modules/
+
+# ===== SEGREDOS E DADOS (NUNCA SUBIR!) =====
+server/.env
+server/data.json
+server/backups/
+*.log
+
+# ===== Scripts antigos de correcao/teste (continham senhas) =====
+fix_*.js
+fix*.js
+test-*.js
+test_*.js
+check*.js
+sw-admin.js
+
+# ===== Sistema / editor =====
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/

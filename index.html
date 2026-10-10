@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <script>if(location.protocol==='file:'){location.replace('http://localhost:3010/'+(location.pathname.split('/').pop()||'index.html'))}</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pousada Aconchego - Bauru/SP</title>
+    <meta name="description" content="Pousada Aconchego em Bauru/SP. Conforto, tranquilidade e o melhor da hospitalidade.">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1b5e20">
+    <link rel="stylesheet" href="css/style.css?v=4">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- HEADER -->
+    <header id="header">
+        <nav class="nav container">
+            <a href="#inicio" class="logo">🏡 Pousada <span>Aconchego</span></a>
+            <button class="hamburger" id="hamburger" aria-label="Menu">☰</button>
+            <ul class="menu" id="menu">
+                <li><a href="#inicio">Início</a></li>
+                <li><a href="#sobre">Sobre</a></li>
+                <li><a href="#quartos">Quartos</a></li>
+                <li><a href="#diferenciais">Diferenciais</a></li>
+                <li><a href="#galeria">Galeria</a></li>
+                <li><a href="#contato">Contato</a></li>
+                <li><a href="login.html" class="btn-cliente">Área do Cliente</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- HERO -->
+    <section id="inicio" class="hero">
+        <div class="hero-inner">
+            <div class="hero-img"></div>
+            <div class="hero-app">
+                <div class="app-card">
+                    <span>📲</span>
+                    <strong>App exclusivo para clientes!</strong>
+                    <p>Reservas, comanda e pagamentos na palma da mão.</p>
+                    <button id="btnInstallHero" class="btn btn-primary">Baixar App</button>
+                </div>
+            </div>
+            <div class="hero-content">
+                <h1>Seu refúgio em <span>Bauru</span></h1>
+                <p>Conforto, tranquilidade e hospitalidade de verdade no coração do interior paulista.</p>
+                <div class="hero-btns">
+                    <a href="#quartos" class="btn btn-primary">Ver Quartos</a>
+                    <a href="#contato" class="btn btn-outline">Reservar Agora</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SOBRE -->
+    <section id="sobre" class="section alt">
+        <div class="container sobre-container">
+            <h2 class="section-title">Sobre a Pousada</h2>
+            <p id="sobreTexto" class="sobre-texto">Uma pousada aconchegante no coração de Bauru.</p>
+        </div>
+    </section>
+
+    <!-- QUARTOS -->
+    <section id="quartos" class="section container">
+        <h2 class="section-title">Nossos Quartos</h2>
+        <p class="section-sub">Ambientes pensados para você descansar de verdade</p>
+        <div class="cards">
+            <div class="card">
+                <div class="card-img q1">🛏️</div>
+                <h3>Suíte Standard</h3>
+                <p>Cama de casal, TV, Wi-Fi e ar-condicionado.</p>
+                <span class="preco">a partir de R$ 180<small>/noite</small></span>
+            </div>
+            <div class="card">
+                <div class="card-img q2">🌿</div>
+                <h3>Suíte Luxo</h3>
+                <p>Mais espaço, frigobar, varanda e vista para o jardim.</p>
+                <span class="preco">a partir de R$ 260<small>/noite</small></span>
+            </div>
+            <div class="card">
+                <div class="card-img q3">👨‍👩‍👧‍👦</div>
+                <h3>Suíte Família</h3>
+                <p>Até 4 pessoas, camas extras e espaço kids.</p>
+                <span class="preco">a partir de R$ 320<small>/noite</small></span>
+            </div>
+        </div>
+    </section>
+
+    <!-- DIFERENCIAIS -->
+    <section id="diferenciais" class="section alt">
+        <div class="container">
+            <h2 class="section-title">Por que nos escolher?</h2>
+            <div class="features">
+                <div class="feature"><span>🍽️</span><h4>Quartos com frigobar</h4><p>TV, Wi-Fi e ventilador</p></div>
+                <div class="feature"><span>📶</span><h4>Wi-Fi grátis</h4><p>Em todos os ambientes</p></div>
+                <div class="feature"><span>🍳</span><h4>Cozinha</h4><p>À disposição dos hóspedes</p></div>
+                <div class="feature"><span>🅿️</span><h4>Estacionamento</h4><p>Privativo e seguro</p></div>
+                <div class="feature"><span>🧹</span><h4>Limpeza diária</h4><p>Quarto sempre impecável</p></div>
+                <div class="feature"><span>🍹</span><h4>Pedidos no quarto</h4><p>Pelo nosso app de hóspedes</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- GALERIA -->
+    <section id="galeria" class="section container">
+        <h2 class="section-title">Galeria</h2>
+        <div class="galeria">
+            <div class="g g1">🌸</div><div class="g g2">🏡</div><div class="g g3">🛏️</div>
+            <div class="g g4">☕</div><div class="g g5">🌳</div><div class="g g6">🌅</div>
+        </div>
+    </section>
+
+    <!-- CONTATO -->
+    <section id="contato" class="section alt">
+        <div class="container contato-grid">
+            <div>
+                <h2 class="section-title">Fale Conosco</h2>
+                <p>📍 Bauru - SP</p>
+                <p>📱 WhatsApp: (14) 99831-3110</p>
+                <p>✉️ contato@pousadaaconchego.com.br</p>
+                <a class="btn btn-primary" href="https://wa.me/5514998313110" target="_blank">Chamar no WhatsApp</a>
+            </div>
+            <form class="form" onsubmit="return false;">
+                <input type="text" placeholder="Seu nome" required>
+                <input type="tel" placeholder="Seu WhatsApp" required>
+                <input type="date" placeholder="Check-in">
+                <input type="date" placeholder="Check-out">
+                <button class="btn btn-primary" type="submit">Solicitar Reserva</button>
+            </form>
+        </div>
+    </section>
+
+    <footer>
+        <p>© 2026 Pousada Aconchego - Bauru/SP. Todos os direitos reservados.</p>
+        <button id="btnInstall" class="btn-install" hidden>📲 Instalar App</button>
+    </footer>
+
+    <script src="js/main.js?v=3"></script>
+    <script src="js/site.js?v=4"></script>
+    <script src="js/offline.js?v=3"></script>
+    <script>
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+    </script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>if(location.protocol==='file:'){location.replace('http://localhost:3010/'+(location.pathname.split('/').pop()||'index.html'))}</script>
+<title>Área do Cliente - Pousada Aconchego</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{background:var(--verde-suave);padding-top:70px}
+.box{max-width:420px;margin:40px auto;background:#fff;padding:35px;border-radius:16px;box-shadow:0 6px 18px rgba(0,0,0,.1);text-align:center}
+.box input{width:100%;padding:13px;margin:8px 0;border:1px solid #d7e3d8;border-radius:10px}
+.box .btn{width:100%;margin-top:10px}
+.tabs{display:flex;gap:10px;margin-bottom:15px}
+.tabs button{flex:1;padding:10px;border:none;background:var(--verde-suave);border-radius:10px;cursor:pointer;font-weight:600}
+.tabs button.active{background:var(--verde);color:#fff}
+</style>
+</head>
+<body>
+<div class="box">
+    <h2 style="color:var(--verde)">🏡 Pousada Aconchego</h2>
+    <div class="tabs">
+        <button id="tLogin" class="active" onclick="moto('login')">Entrar</button>
+        <button id="tCad" onclick="moto('cad')">Cadastrar</button>
+    </div>
+    <div id="fLogin">
+        <input id="lEmail" placeholder="Email">
+        <input id="lSenha" type="password" placeholder="Senha">
+        <button class="btn btn-primary" onclick="login()">Entrar</button>
+    </div>
+    <div id="fCad" style="display:none">
+        <input id="cNome" placeholder="Nome completo">
+        <input id="cTel" placeholder="Telefone">
+        <input id="cEmail" placeholder="Email">
+        <input id="cSenha" type="password" placeholder="Senha">
+        <button class="btn btn-primary" onclick="cadastro()">Criar conta</button>
+    </div>
+    <p id="msg" style="margin-top:10px;color:#c00"></p>
+    <p style="margin-top:15px"><a href="index.html">← Voltar ao site</a></p>
+</div>
+<script>
+const API=(location.origin&&location.origin.startsWith('http')?location.origin:'http://localhost:3010')+'/api';
+function moto(m){
+    document.getElementById('fLogin').style.display=m==='login'?'block':'none';
+    document.getElementById('fCad').style.display=m==='cad'?'block':'none';
+    tLogin.classList.toggle('active',m==='login'); tCad.classList.toggle('active',m==='cad');
+}
+async function login(){
+    try {
+        const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:lEmail.value,senha:lSenha.value})});
+        const j=await r.json();
+        if(j.token){localStorage.setItem('token',j.token);localStorage.setItem('user',JSON.stringify(j.user));
+            location.href = (j.user.role==='admin' || j.user.role==='funcionario') ? 'admin.html' : 'cliente.html';}
+        else msg.innerText = j.erro || 'Email ou senha incorretos.';
+    } catch(e){
+        msg.innerText = 'Nao foi possivel conectar ao servidor. Abra o INICIAR.bat e acesse http://localhost:3010';
+    }
+}
+async function cadastro(){
+    try {
+        const r=await fetch(API+'/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:cNome.value,email:cEmail.value,senha:cSenha.value,telefone:cTel.value})});
+        const j=await r.json();
+        msg.innerText = j.ok ? 'Conta criada! Faca login.' : (j.erro || 'Falha no cadastro.');
+    } catch(e){
+        msg.innerText = 'Nao foi possivel conectar ao servidor. Verifique se ele esta ligado.';
+    }
+}
+</script>
+<script src="js/offline.js"></script>
+</body>
+</html>

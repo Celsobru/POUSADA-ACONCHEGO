@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>if(location.protocol==='file:'){location.replace('http://localhost:3010/'+(location.pathname.split('/').pop()||'index.html'))}</script>
+<title>Meu Painel - Pousada Aconchego</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{background:var(--verde-suave);padding-top:70px}
+.wrap{max-width:900px;margin:30px auto;padding:0 15px}
+.card2{background:#fff;border-radius:14px;padding:20px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #eee;text-align:left}
+select,input{padding:10px;border:1px solid #ccc;border-radius:8px;margin:4px 0}
+.quarto-lista p{margin:8px 0;padding:10px;border-radius:8px;background:var(--verde-suave)}
+.reserva-box{border:1px solid #eee;border-radius:10px;padding:14px;margin-bottom:12px}
+.reserva-box h4{margin-bottom:6px;color:var(--verde)}
+.data-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.data-row label{font-size:.85rem;color:#4e5a4f}
+</style>
+</head>
+<body>
+<header><nav class="nav container"><a class="logo" href="index.html">🏡 Aconchego</a><a href="#" onclick="localStorage.clear();location.href='login.html'">Sair</a></nav></header>
+<div class="wrap">
+<h2 id="ola" style="color:var(--verde)"></h2>
+
+<div class="card2">
+<h3>🛏 Nossos Quartos</h3>
+<div id="quartos" class="quarto-lista">Carregando...</div>
+</div>
+
+<div class="card2">
+<h3>📲 Fazer Reserva</h3>
+<p class="small">Escolha o quarto e as datas desejadas e fale com a recepção pelo WhatsApp. A reserva é confirmada pela administração.</p>
+<select id="qSel"></select>
+<div class="data-row">
+    <label>Entrada <input type="date" id="in"></label>
+    <label>Saída <input type="date" id="out"></label>
+</div>
+<button class="btn btn-primary" onclick="fazerReserva()">📲 Fazer Reserva pelo WhatsApp</button>
+<p id="reservaMsg" class="small"></p>
+</div>
+
+<div class="card2">
+<h3>📅 Minhas Reservas e Consumo</h3>
+<div id="minhas">Carregando...</div>
+</div>
+</div>
+
+<script>
+const API=(location.origin&&location.origin.startsWith('http')?location.origin:'http://localhost:3010')+'/api';
+const token=localStorage.getItem('token'); const user=JSON.parse(localStorage.getItem('user')||'{}');
+if(!token||user.role==='admin') location.href='login.html';
+document.getElementById('ola').innerText='Olá, '+user.nome+'! 👋';
+const H={'Content-Type':'application/json','Authorization':'Bearer '+token};
+let whatsappAdm='5514998313110';
+
+function fmtMoeda(v){ return 'R$ '+(Number(v)||0).toFixed(2).replace('.',','); }
+function fmtData(d){ if(!d) return '-'; const p=String(d).slice(0,10).split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+async function carregar(){
+    // Quartos e valores (somente visualização)
+    const q=await (await fetch(API+'/disponibilidade')).json();
+    document.getElementById('quartos').innerHTML = q.map(x=>
+        '<p>'+ (x.disponivel?'✅ Disponível':'❌ Ocupado') + ' <b>' + x.nome + '</b> — ' + fmtMoeda(x.diaria) + '/noite' + (x.capacidade?' • até '+x.capacidade+' pessoas':'') + '</p>'
+    ).join('') || '<p>Nenhum quarto cadastrado.</p>';
+    document.getElementById('qSel').innerHTML = q.map(x=>
+        '<option value="'+x.nome+'"'+(x.disponivel?'':' disabled')+'>'+x.nome+' - '+fmtMoeda(x.diaria)+'/noite'+(x.disponivel?'':' (ocupado)')+'</option>'
+    ).join('');
+
+    // Número de WhatsApp da administração (configurado no site)
+    try {
+        const s=await (await fetch(API+'/site/public')).json();
+        if (s.whatsapp) whatsappAdm=s.whatsapp;
+        else if (s.telefone) whatsappAdm=s.telefone;
+    } catch(e){}
+    let num=String(whatsappAdm).replace(/\D/g,'');
+    if (num && num.length<=11) num='55'+num;
+    whatsappAdm=num || '5514998313110';
+
+    // Minhas reservas com tudo: valores, consumo e total
+    const m=await (await fetch(API+'/minhas-reservas',{headers:H})).json();
+    document.getElementById('minhas').innerHTML = m.length
+        ? m.map(renderReserva).join('')
+        : '<p>Você ainda não tem reservas. Use o botão <b>Fazer Reserva</b> acima. 😊</p>';
+}
+
+function renderReserva(r){
+    const adic=r.adicionais||[];
+    const consumo=adic.reduce((s,i)=>s+(Number(i.preco)||0)*(Number(i.qtd)||0),0);
+    const total=(r.totalFinal!=null)?r.totalFinal:(Number(r.valor||0)+consumo);
+    const itens = adic.length
+        ? '<table style="margin-top:8px"><thead><tr><th>Item</th><th>Qtd</th><th>Valor</th></tr></thead><tbody>'+
+          adic.map(i=>'<tr><td>'+i.nome+'</td><td>'+i.qtd+'x</td><td>'+fmtMoeda((Number(i.preco)||0)*(Number(i.qtd)||0))+'</td></tr>').join('')+
+          '</tbody></table>'
+        : '<p class="small">Nenhum consumo adicional.</p>';
+    const cor = r.status==='ativa' ? '#1b5e20' : '#c62828';
+    return '<div class="reserva-box">'+
+        '<h4>#'+r.id+' — '+r.quartoNome+' <span style="font-size:.8rem;color:'+cor+'">('+r.status+')</span></h4>'+
+        '<p>📅 '+fmtData(r.entrada)+' a '+fmtData(r.saida)+' • '+r.noites+' noite(s)</p>'+
+        '<p>🏨 Hospedagem: <b>'+fmtMoeda(r.valor)+'</b></p>'+
+        '<p>🍹 Consumo adicional: <b>'+fmtMoeda(consumo)+'</b></p>'+
+        itens+
+        '<p style="margin-top:8px;font-size:1.1rem">💰 Total: <b>'+fmtMoeda(total)+'</b>'+(r.formaPagamento?' — pagamento: '+r.formaPagamento:'')+'</p>'+
+        '<button class="btn btn-outline" style="margin-top:8px;padding:8px 16px;font-size:.85rem" onclick="verComprovante('+r.id+')">🧾 Ver comprovante</button>'+
+        '</div>';
+}
+
+function fazerReserva(){
+    const quarto=document.getElementById('qSel').value || '';
+    const entrada=document.getElementById('in').value;
+    const saida=document.getElementById('out').value;
+    let msg='Olá! Gostaria de fazer uma reserva na Pousada Aconchego. 😊';
+    if (quarto)  msg += '\nQuarto de interesse: '+quarto;
+    if (entrada) msg += '\nEntrada: '+fmtData(entrada);
+    if (saida)   msg += '\nSaída: '+fmtData(saida);
+    const url='https://wa.me/'+whatsappAdm+'?text='+encodeURIComponent(msg);
+    document.getElementById('reservaMsg').innerHTML='Abrindo o WhatsApp da recepção... Se não abrir, <a href="'+url+'" target="_blank">clique aqui</a>.';
+    window.open(url,'_blank');
+}
+
+async function verComprovante(id){
+    try {
+        const r=await fetch(API+'/comprovante/'+id,{headers:H});
+        if(!r.ok){ alert('Não foi possível abrir o comprovante.'); return; }
+        const html=await r.text();
+        const w=window.open('','_blank');
+        if (w) { w.document.write(html); w.document.close(); }
+        else alert('Permita pop-ups para ver o comprovante.');
+    } catch(e){ alert('Erro de conexão'); }
+}
+
+carregar();
+</script>
+<script src="js/offline.js"></script>
+</body>
+</html>

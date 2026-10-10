@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<script>if(location.protocol==='file:'){location.replace('http://localhost:3010/'+(location.pathname.split('/').pop()||'index.html'))}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Administrativo - Pousada Aconchego</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/admin.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="admin-layout">
+
+    <!-- ============ SIDEBAR ============ -->
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+            <h2>🏡 Pousada Aconchego</h2>
+            <span class="badge-admin">Painel Admin</span>
+        </div>
+        <nav class="sidebar-nav">
+            <button class="nav-item active" data-section="dashboard"><span>📊</span><span>Dashboard</span></button>
+            <button class="nav-item" data-section="reservas"><span>📅</span><span>Reservas</span></button>
+            <button class="nav-item" data-section="nova-reserva"><span>➕</span><span>Nova Reserva</span></button>
+            <button class="nav-item" data-section="caixa"><span>💰</span><span>Caixa</span></button>
+            <button class="nav-item" data-section="produtos"><span>🍹</span><span>Produtos &amp; Comandas</span></button>
+            <button class="nav-item" data-section="quartos"><span>🛏️</span><span>Quartos</span></button>
+            <button class="nav-item" data-section="clientes"><span>👥</span><span>Clientes</span></button>
+            <button class="nav-item" data-section="financeiro"><span>📈</span><span>Financeiro</span></button>
+            <button class="nav-item" data-section="usuarios"><span>🧑‍💼</span><span>Usuários</span></button>
+            <button class="nav-item" data-section="site-quartos"><span>🏠</span><span>Site: Quartos</span></button>
+            <button class="nav-item" data-section="site-textos"><span>✍️</span><span>Site: Textos</span></button>
+            <button class="nav-item" data-section="site-diferenciais"><span>⭐</span><span>Site: Diferenciais</span></button>
+            <button class="nav-item" data-section="site-galeria"><span>🖼️</span><span>Site: Galeria</span></button>
+            <button class="nav-item" data-section="site-secoes"><span>📑</span><span>Site: Seções Extras</span></button>
+            <button class="nav-item" data-section="config"><span>⚙️</span><span>Configurações</span></button>
+            <button class="nav-item" data-section="backup"><span>💾</span><span>Backup</span></button>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="btn-logout" onclick="logout()">🚪 Sair</button>
+        </div>
+    </aside>
+
+    <!-- ============ MAIN ============ -->
+    <main class="main-content">
+        <header class="top-bar">
+            <button id="menuToggle" class="menu-toggle">☰</button>
+            <div class="top-bar-info">
+                <span id="caixaStatusTop" class="caixa-status-top fechado">Caixa Fechado</span>
+                <span class="user-info">👤 <span id="adminName">Admin</span></span>
+            </div>
+        </header>
+
+        <!-- ===== DASHBOARD ===== -->
+        <section id="sec-dashboard" class="content-section active">
+            <div class="section-header">
+                <h1>Dashboard</h1>
+                <p class="subtitle">Visão geral da pousada</p>
+            </div>
+            <div class="cards-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div><div class="stat-value" id="statReservasAtivas">0</div><div class="stat-label">Reservas Ativas</div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div><div class="stat-value" id="statFaturamentoHoje">R$ 0,00</div><div class="stat-label">Faturamento Total</div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🛏️</div>
+                    <div><div class="stat-value" id="statQuartosOcupados">0 / 3</div><div class="stat-label">Quartos Ocupados</div></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔑</div>
+                    <div><div class="stat-value" id="statCheckinsHoje">0</div><div class="stat-label">Check-ins Hoje</div></div>
+                </div>
+            </div>
+            <div class="cards-grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr))">
+                <div class="card-full">
+                    <h3>🔑 Check-ins / Check-outs de Hoje</h3>
+                    <div id="reservasHoje"><p class="small">Carregando...</p></div>
+                </div>
+                <div class="card-full">
+                    <h3>🔜 Próximos Check-outs</h3>
+                    <div id="proximosCheckouts"><p class="small">Carregando...</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== RESERVAS ===== -->
+        <section id="sec-reservas" class="content-section">
+            <div class="section-header">
+                <h1>Reservas</h1>
+                <p class="subtitle">Gerenciar reservas da pousada</p>
+            </div>
+            <div class="filters-bar">
+                <select id="filtroStatus">
+                    <option value="">Todos os status</option>
+                    <option value="ativa">Ativas</option>
+                    <option value="finalizada">Finalizadas</option>
+                    <option value="cancelada">Canceladas</option>
+                </select>
+                <input type="date" id="filtroData" title="Filtrar por data">
+            </div>
+            <div class="table-container">
+                <table id="tabelaReservas" class="data-table">
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Cliente</th><th>Quarto</th><th>Entrada</th><th>Saída</th>
+                            <th>Noites</th><th>Valor</th><th>Adicionais</th><th>Total</th><th>Status</th><th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody><tr><td colspan="11" style="text-align:center">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== NOVA RESERVA ===== -->
+        <section id="sec-nova-reserva" class="content-section">
+            <div class="section-header">
+                <h1>Nova Reserva</h1>
+                <p class="subtitle">Abrir reserva para um cliente</p>
+            </div>
+            <div class="card-full">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Cliente <span class="required">*</span></label>
+                        <select id="nrCliente"><option value="">Carregando...</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quarto <span class="required">*</span></label>
+                        <select id="nrQuarto"><option value="">Carregando...</option></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Check-in <span class="required">*</span></label>
+                        <input type="date" id="nrEntrada">
+                    </div>
+                    <div class="form-group">
+                        <label>Check-out <span class="required">*</span></label>
+                        <input type="date" id="nrSaida">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <button id="btnNovaReserva" class="btn btn-primary" onclick="abrirNovaReserva()">➕ Criar Reserva</button>
+                </div>
+                <p id="nrMsg" class="msg"></p>
+            </div>
+        </section>
+
+        <!-- ===== CAIXA ===== -->
+        <section id="sec-caixa" class="content-section">
+            <div class="section-header">
+                <h1>Caixa</h1>
+                <p class="subtitle">Controle de movimentações financeiras</p>
+            </div>
+            <div class="card-full caixa-status-card" style="margin-bottom:20px">
+                <div class="caixa-status-header">
+                    <div>
+                        <span id="caixaBadge" class="caixa-badge fechado">FECHADO</span>
+                        <h3 id="caixaTitulo" style="display:inline;margin-left:10px">Caixa Fechado</h3>
+                    </div>
+                </div>
+
+                <div id="caixaInfoFechado">
+                    <div class="form-row" style="margin-top:16px">
+                        <div class="form-group">
+                            <label>Valor Inicial (R$)</label>
+                            <input type="number" id="caixaValorInicial" step="0.01" min="0" placeholder="0,00">
+                        </div>
+                        <button class="btn btn-primary" onclick="abrirCaixa()">🔓 Abrir Caixa</button>
+                    </div>
+                </div>
+
+                <div id="caixaInfoAberto" style="display:none">
+                    <p class="small" style="margin-top:12px">Valor inicial (fundo de troco): <strong id="caixaValorInicialDisplay">R$ 0,00</strong></p>
+                    <div class="caixa-valores">
+                        <div class="valor-box">
+                            <div class="valor-label">Entradas</div>
+                            <div class="valor-amount" id="caixaEntradas">R$ 0,00</div>
+                        </div>
+                        <div class="valor-box">
+                            <div class="valor-label">Saídas</div>
+                            <div class="valor-amount" id="caixaSaidas">R$ 0,00</div>
+                        </div>
+                        <div class="valor-box total">
+                            <div class="valor-label">Saldo Total</div>
+                            <div class="valor-amount" id="caixaSaldo">R$ 0,00</div>
+                        </div>
+                    </div>
+                    <p class="small" id="caixaBreakdown" style="margin-top:12px"></p>
+                    <div class="caixa-valores" style="margin-top:8px">
+                        <div class="valor-box total">
+                            <div class="valor-label">💵 Dinheiro esperado na gaveta</div>
+                            <div class="valor-amount" id="caixaDinheiroGaveta">R$ 0,00</div>
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-top:16px">
+                        <div class="form-group">
+                            <label>💵 Dinheiro contado na gaveta (R$)</label>
+                            <input type="number" id="caixaValorFinal" step="0.01" min="0" placeholder="0,00">
+                        </div>
+                        <button class="btn btn-danger" onclick="fecharCaixa()">🔒 Fechar Caixa</button>
+                    </div>
+                    <p class="small" style="margin-top:8px">ℹ️ PIX e cartão <strong>não entram na gaveta</strong> — só contam no Saldo Total. Conte apenas o dinheiro físico.</p>
+                </div>
+            </div>
+
+            <h3 style="color:#1b5e20;margin:24px 0 12px">🧾 Reservas em Aberto (pendentes de fechamento)</h3>
+            <p class="small" style="margin-bottom:12px">Reservas ainda não finalizadas. Clique em <strong>Ver / Lançar</strong> para conferir o consumo e adicionar produtos, ou em <strong>Finalizar</strong> para receber e escolher a forma de pagamento.</p>
+            <div id="reservasCaixaContainer"><p class="small">Carregando...</p></div>
+
+            <h3 style="color:#1b5e20;margin:24px 0 12px">📋 Movimentações do Caixa</h3>
+            <div class="table-container">
+                <table id="tabelaCaixa" class="data-table">
+                    <thead>
+                        <tr><th>Data/Hora</th><th>Tipo</th><th>Descrição</th><th>Entrada</th><th>Saída</th><th>Saldo</th><th>Responsável</th></tr>
+                    </thead>
+                    <tbody><tr><td colspan="7" style="text-align:center">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== PRODUTOS & COMANDAS ===== -->
+        <section id="sec-produtos" class="content-section">
+            <div class="section-header">
+                <h1>Produtos &amp; Comandas</h1>
+                <p class="subtitle">Cardápio de pedidos e comandas abertas</p>
+            </div>
+            <div class="card-full" style="margin-bottom:20px">
+                <h3>➕ Adicionar Produto</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nome <span class="required">*</span></label>
+                        <input type="text" id="pNome" placeholder="Ex: Cerveja lata">
+                    </div>
+                    <div class="form-group">
+                        <label>Preço (R$) <span class="required">*</span></label>
+                        <input type="number" id="pPreco" step="0.01" min="0" placeholder="0,00">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <button class="btn btn-primary" onclick="addProduto()">Adicionar</button>
+                </div>
+                <p id="pMsg" class="msg"></p>
+            </div>
+
+            <div class="table-container" style="margin-bottom:24px">
+                <table id="tabelaProdutos" class="data-table">
+                    <thead><tr><th>#</th><th>Produto</th><th>Preço</th><th>Ações</th></tr></thead>
+                    <tbody><tr><td colspan="4" style="text-align:center">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+
+            <h3 style="color:#1b5e20;margin-bottom:12px">🧾 Comandas Abertas</h3>
+            <div id="comandasContainer"><p class="small">Carregando...</p></div>
+        </section>
+
+        <!-- ===== QUARTOS ===== -->
+        <section id="sec-quartos" class="content-section">
+            <div class="section-header">
+                <h1>Quartos</h1>
+                <p class="subtitle">Gerenciar quartos da pousada</p>
+            </div>
+            <div class="card-full" style="margin-bottom:20px">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nome <span class="required">*</span></label>
+                        <input type="text" id="qNome" placeholder="Ex: Suíte Luxo">
+                    </div>
+                    <div class="form-group">
+                        <label>Diária (R$) <span class="required">*</span></label>
+                        <input type="number" id="qDiaria" step="0.01" min="0" placeholder="0,00">
+                    </div>
+                    <div class="form-group">
+                        <label>Capacidade</label>
+                        <input type="number" id="qCap" min="1" value="2">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <button class="btn btn-primary" onclick="addQuarto()">Adicionar Quarto</button>
+                </div>
+                <p id="qMsg" class="msg"></p>
+            </div>
+            <div class="table-container">
+                <table id="tabelaQuartos" class="data-table">
+                    <thead><tr><th>#</th><th>Nome</th><th>Diária</th><th>Capacidade</th><th>Status</th><th>Ações</th></tr></thead>
+                    <tbody><tr><td colspan="6" style="text-align:center">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== CLIENTES ===== -->
+        <section id="sec-clientes" class="content-section">
+            <div class="section-header">
+                <h1>Clientes</h1>
+                <p class="subtitle">Clientes cadastrados no sistema</p>
+            </div>
+            <div class="card-full" style="margin-bottom:20px">
+                <h3>➕ Cadastrar Novo Cliente</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nome <span class="required">*</span></label>
+                        <input type="text" id="cNome" placeholder="Nome completo">
+                    </div>
+                    <div class="form-group">
+                        <label>Email <span class="required">*</span></label>
+                        <input type="email" id="cEmail" placeholder="email@exemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Senha <span class="required">*</span></label>
+                        <input type="password" id="cSenha" placeholder="Senha de acesso">
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone</label>
+                        <input type="text" id="cTelefone" placeholder="(00) 00000-0000">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <button class="btn btn-primary" onclick="addCliente()">Cadastrar Cliente</button>
+                </div>
+                <p id="cMsg" class="msg"></p>
+            </div>
+            <div class="table-container">
+                <table id="tabelaClientes" class="data-table">
+                    <thead><tr><th>#</th><th>Nome</th><th>Email</th><th>Telefone</th><th>Cadastro</th><th>Ações</th></tr></thead>
+                    <tbody><tr><td colspan="6" style="text-align:center">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== FINANCEIRO ===== -->
+        <section id="sec-financeiro" class="content-section">
+            <div class="section-header">
+                <h1>Financeiro</h1>
+                <p class="subtitle">Faturamento e pagamentos</p>
+            </div>
+            <div class="cards-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div><div class="stat-value" id="fatTotal">R$ 0,00</div><div class="stat-label">Faturamento Total</div></div>
+                </div>
+            </div>
+            <div class="filters-bar">
+                <select id="filtroAno">
+                    <option value="">Todos os anos</option>
+                    <option value="2026">2026</option>
+                    <option value="2025">2025</option>
+                    <option value="2024">2024</option>
+                </select>
+            </div>
+            <div class="card-full" style="margin-bottom:20px">
+                <h3>📅 Faturamento por Mês</h3>
+                <div class="table-container">
+                    <table id="tabelaMensal" class="data-table">
+                        <thead><tr><th>Mês</th><th>Valor</th><th>Entradas</th><th>Saídas</th><th>Saldo</th></tr></thead>
+                        <tbody><tr><td colspan="5" style="text-align:center">Carregando...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-full">
+                <h3>💳 Pagamentos</h3>
+                <div class="table-container">
+                    <table id="tabelaPagamentos" class="data-table">
+                        <thead><tr><th>Data</th><th>Reserva</th><th>Cliente</th><th>Forma</th><th>Valor</th></tr></thead>
+                        <tbody><tr><td colspan="5" style="text-align:center">Carregando...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== USUÁRIOS ===== -->
+        <section id="sec-usuarios" class="content-section">
+            <div class="section-header">
+                <h1>Usuários do Sistema</h1>
+                <p class="subtitle">Admins e funcionários</p>
+            </div>
+            <div class="card-full" style="margin-bottom:20px">
+                <h3>➕ Novo Usuário</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nome <span class="required">*</span></label>
+                        <input type="text" id="uNome" placeholder="Nome completo">
+                    </div>
+                    <div class="form-group">
+                        <label>Email <span class="required">*</span></label>
+                        <input type="email" id="uEmail" placeholder="email@exemplo.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Senha <span class="required">*</span></label>
+                        <input type="password" id="uSenha" placeholder="Senha">
+                    </div>
+                    <div class="form-group">
+                        <label>Telefone</label>
+                        <input type="text" id="uTelefone" placeholder="(00) 00000-0000">
+                    </div>
+                    <div class="form-group">
+                        <label>Perfil <span class="required">*</span></label>
+                        <select id="uRole">
+                            <option value="funcionario">Funcionário</option>
+                            <option value="admin">Administrador</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <button class="btn btn-primary" onclick="addUsuario()">Criar Usuário</button>
+                </div>
+                <p id="uMsg" class="msg"></p>
+            </div>
+            <div class="table-container">
+                <table id="tabelaUsuarios" class="data-table">
+                    <thead><tr><th>#</th><th>Nome</th><th>Email</th><th>Telefone</th><th>Perfil</th><th>Criado em</th><th>Ações</th></tr></thead>
+                    <tbody><tr><td colspan="7" style="text-align:center">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== SITE: QUARTOS ===== -->
+        <section id="sec-site-quartos" class="content-section">
+            <div class="section-header">
+                <h1>Site: Quartos</h1>
+                <p class="subtitle">Quartos exibidos no site público</p>
+            </div>
+            <div class="card-full" style="margin-bottom:20px">
+                <h3>➕ Novo Quarto do Site</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nome <span class="required">*</span></label>
+                        <input type="text" id="sqNome" placeholder="Ex: Suíte Família">
+                    </div>
+                    <div class="form-group">
+                        <label>Diária (R$) <span class="required">*</span></label>
+                        <input type="number" id="sqDiaria" step="0.01" min="0" placeholder="0,00">
+                    </div>
+                    <div class="form-group">
+                        <label>Capacidade</label>
+                        <input type="number" id="sqCap" min="1" value="2">
+                    </div>
+                    <div class="form-group">
+                        <label>URL da Foto</label>
+                        <input type="text" id="sqFoto" placeholder="https://...">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Descrição</label>
+                        <input type="text" id="sqDesc" placeholder="Descrição do quarto no site">
+                    </div>
+                    <div class="form-group">
+                        <label><input type="checkbox" id="sqAtivo" checked> Ativo no site</label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <button class="btn btn-primary" onclick="addSiteQuarto()">Adicionar</button>
+                </div>
+                <p id="sqMsg" class="msg"></p>
+            </div>
+            <div class="table-container">
+                <table id="tabelaSiteQuartos" class="data-table">
+                    <thead><tr><th>#</th><th>Nome</th><th>Diária</th><th>Cap.</th><th>Foto</th><th>Descrição</th><th>Status</th><th>Ações</th></tr></thead>
+                    <tbody><tr><td colspan="8" style="text-align:center">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== SITE: TEXTOS ===== -->
+        <section id="sec-site-textos" class="content-section">
+            <div class="section-header">
+                <h1>Site: Textos</h1>
+                <p class="subtitle">Textos e informações exibidas no site</p>
+            </div>
+            <div class="config-grid">
+                <div class="config-card">
+                    <h4>🏠 Cabeçalho</h4>
+                    <input type="text" id="stTitulo" placeholder="Título do site">
+                    <input type="text" id="stSubtitulo" placeholder="Subtítulo">
+                    <textarea id="stDescricao" rows="3" placeholder="Descrição do site"></textarea>
+                </div>
+                <div class="config-card">
+                    <h4>🛏️ Seção de Quartos</h4>
+                    <input type="text" id="stQuartosTitulo" placeholder="Título da seção de quartos">
+                    <input type="text" id="stQuartosSub" placeholder="Subtítulo da seção">
+                    <input type="text" id="stDifTitulo" placeholder="Título dos diferenciais">
+                </div>
+                <div class="config-card">
+                    <h4>📞 Contato</h4>
+                    <input type="text" id="stTelefone" placeholder="Telefone">
+                    <input type="text" id="stEmail" placeholder="Email">
+                    <input type="text" id="stWhatsApp" placeholder="WhatsApp (5514999999999)">
+                    <input type="text" id="stEndereco" placeholder="Endereço">
+                </div>
+                <div class="config-card">
+                    <h4>🖼️ Imagens</h4>
+                    <input type="text" id="stHeroImg" placeholder="URL da imagem hero">
+                    <input type="file" id="stHeroFile" accept="image/*">
+                    <button class="btn btn-outline btn-sm" onclick="uploadHeroSite()">⬆️ Enviar Hero</button>
+                    <hr style="margin:12px 0">
+                    <input type="text" id="stLogo" placeholder="URL do logo">
+                    <input type="file" id="stLogoFile" accept="image/*">
+                    <button class="btn btn-outline btn-sm" onclick="uploadLogoSite()">⬆️ Enviar Logo</button>
+                </div>
+                <div class="config-card">
+                    <h4>ℹ️ Sobre a Pousada</h4>
+                    <textarea id="stSobre" rows="4" placeholder="Texto sobre a pousada"></textarea>
+                </div>
+            </div>
+            <div class="form-row">
+                <button class="btn btn-primary" onclick="salvarTextosSite()">💾 Salvar Textos</button>
+            </div>
+            <p id="stMsg" class="msg"></p>
+        </section>
+
+        <!-- ===== SITE: DIFERENCIAIS ===== -->
+        <section id="sec-site-diferenciais" class="content-section">
+            <div class="section-header">
+                <h1>Site: Diferenciais</h1>
+                <p class="subtitle">Motivos para escolher a pousada</p>
+            </div>
+            <div class="card-full" style="margin-bottom:20px">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Ícone (emoji) <span class="required">*</span></label>
+                        <input type="text" id="dfIcone" placeholder="Ex: ☕">
+                    </div>
+                    <div class="form-group">
+                        <label>Título <span class="required">*</span></label>
+                        <input type="text" id="dfTitulo" placeholder="Ex: Café da manhã">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Descrição</label>
+                        <input type="text" id="dfDesc" placeholder="Descrição curta">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <button class="btn btn-primary" onclick="addDiferencial()">Adicionar</button>
+                </div>
+                <p id="dfMsg" class="msg"></p>
+            </div>
+            <div class="table-container">
+                <table id="tabelaDiferenciais" class="data-table">
+                    <thead><tr><th>#</th><th>Ícone</th><th>Título</th><th>Descrição</th><th>Ações</th></tr></thead>
+                    <tbody><tr><td colspan="5" style="text-align:center">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== SITE: GALERIA ===== -->
+        <section id="sec-site-galeria" class="content-section">
+            <div class="section-header">
+                <h1>Site: Galeria</h1>
+                <p class="subtitle">Fotos e vídeos do site</p>
+            </div>
+            <div class="card-full" style="margin-bottom:20px">
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>URL da imagem/vídeo</label>
+                        <input type="text" id="sgUrl" placeholder="https://...">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Legenda</label>
+                        <input type="text" id="sgLegenda" placeholder="Legenda opcional">
+                    </div>
+                </div>
+                <div class="form-row" style="margin-bottom:16px">
+                    <button class="btn btn-primary" onclick="addGaleriaSite()">➕ Adicionar por URL</button>
+                    <input type="file" id="sgFile" accept="image/*,video/*">
+                    <button class="btn btn-outline" onclick="uploadGaleriaSite()">⬆️ Enviar Arquivo</button>
+                </div>
+                <div id="galeriaSiteAdmin"><p class="small">Carregando...</p></div>
+            </div>
+        </section>
+
+        <!-- ===== SITE: SEÇÕES EXTRAS ===== -->
+        <section id="sec-site-secoes" class="content-section">
+            <div class="section-header">
+                <h1>Site: Seções Extras</h1>
+                <p class="subtitle">Campos customizados adicionados ao site</p>
+            </div>
+            <div class="card-full" style="margin-bottom:20px">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Título <span class="required">*</span></label>
+                        <input type="text" id="seTitulo" placeholder="Título da seção">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="seTipo">
+                            <option value="texto">Texto</option>
+                            <option value="html">HTML</option>
+                            <option value="cards">Cards</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ordem</label>
+                        <input type="number" id="seOrdem" min="1" value="1">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Conteúdo <span class="required">*</span></label>
+                        <textarea id="seConteudo" rows="4" placeholder="Conteúdo da seção"></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <button class="btn btn-primary" onclick="addSecaoExtra()">Adicionar Seção</button>
+                </div>
+                <p id="seMsg" class="msg"></p>
+            </div>
+            <div class="table-container">
+                <table id="tabelaSecoesExtras" class="data-table">
+                    <thead><tr><th>#</th><th>Título</th><th>Tipo</th><th>Ordem</th><th>Ações</th></tr></thead>
+                    <tbody><tr><td colspan="5" style="text-align:center">Carregando...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ===== CONFIGURAÇÕES ===== -->
+        <section id="sec-config" class="content-section">
+            <div class="section-header">
+                <h1>Configurações</h1>
+                <p class="subtitle">Ajustes gerais do site</p>
+            </div>
+            <div class="config-grid">
+                <div class="config-card">
+                    <h4>📝 Textos</h4>
+                    <input type="text" id="sTitulo" placeholder="Título">
+                    <input type="text" id="sSub" placeholder="Subtítulo">
+                    <textarea id="sDesc" rows="3" placeholder="Descrição"></textarea>
+                </div>
+                <div class="config-card">
+                    <h4>📞 Contato</h4>
+                    <input type="text" id="sTel" placeholder="Telefone">
+                    <input type="text" id="sEmail" placeholder="Email">
+                    <input type="text" id="sWpp" placeholder="WhatsApp">
+                </div>
+                <div class="config-card">
+                    <h4>🖼️ Imagens</h4>
+                    <input type="text" id="sImg" placeholder="URL da imagem hero">
+                    <input type="file" id="sImgFile" accept="image/*">
+                    <button class="btn btn-outline btn-sm" onclick="uploadHero()">⬆️ Enviar Hero</button>
+                    <hr style="margin:12px 0">
+                    <input type="text" id="sLogo" placeholder="URL do logo">
+                    <input type="file" id="sLogoFile" accept="image/*">
+                    <button class="btn btn-outline btn-sm" onclick="uploadLogo()">⬆️ Enviar Logo</button>
+                </div>
+                <div class="config-card">
+                    <h4>🖼️ Galeria</h4>
+                    <input type="text" id="gUrl" placeholder="URL da imagem">
+                    <div class="form-row">
+                        <button class="btn btn-outline btn-sm" onclick="addFoto()">Adicionar URL</button>
+                        <input type="file" id="gFile" accept="image/*,video/*">
+                        <button class="btn btn-outline btn-sm" onclick="uploadGaleria()">⬆️ Enviar</button>
+                    </div>
+                    <div id="galeriaAdmin"><p class="small">Nenhuma mídia</p></div>
+                </div>
+            </div>
+            <div class="form-row">
+                <button class="btn btn-primary" onclick="salvarSite()">💾 Salvar Configurações</button>
+            </div>
+            <p id="sMsg" class="msg"></p>
+        </section>
+
+        <!-- ===== BACKUP ===== -->
+        <section id="sec-backup" class="content-section">
+            <div class="section-header">
+                <h1>Backup</h1>
+                <p class="subtitle">Gerenciar backups do sistema</p>
+            </div>
+            <div class="form-row" style="margin-bottom:20px">
+                <button class="btn btn-primary" onclick="backupAgora()">📦 Fazer Backup Agora</button>
+                <button class="btn btn-outline" onclick="backupDownload()">⬇️ Baixar Backup (Download)</button>
+                <button class="btn btn-outline" onclick="testarConexao()">🔧 Testar Conexão API</button>
+            </div>
+            <p class="small">Backups automáticos diários (mantém últimos 7). Agende no servidor: <code>node scripts/backup.js</code></p>
+
+            <hr style="margin:20px 0">
+            <h3>Restaurar via Arquivo</h3>
+            <p class="small">Selecione um arquivo de backup do seu computador para restaurar</p>
+            <div class="form-row" style="margin-bottom:20px">
+                <input type="file" id="bkFile" accept=".json" style="flex:2">
+                <button class="btn btn-primary" onclick="restaurarBackupUpload()">📤 Restaurar Backup</button>
+            </div>
+            <p id="bkMsg" class="msg"></p>
+
+            <hr style="margin:20px 0">
+            <h3>🧾 Reset Operacional (Hospedagens + Caixa + Financeiro)</h3>
+            <p class="small">Apaga <strong>somente</strong> o histórico de: reservas/hospedagens, comandas, movimentações de caixa e pagamentos (financeiro).
+            <br><strong>Mantém:</strong> quartos, fotos/galeria, logo, clientes e produtos. Ideal para testar sem refazer os cadastros.</p>
+            <button class="btn" style="background:#ef6c00;color:white;border:none;padding:12px 24px;border-radius:8px;cursor:pointer" onclick="resetOperacional()">🧾 Reset Operacional (Manter Cadastros)</button>
+
+            <hr style="margin:20px 0">
+            <h3>Limpar Sistema (Reset Total)</h3>
+            <p class="small" style="color:#c62828"><strong>⚠️ ATENÇÃO:</strong> Isso vai APAGAR TUDO e restaurar o sistema para o estado inicial com dados de exemplo. Use apenas para testes!</p>
+            <button class="btn" style="background:#c62828;color:white;border:none;padding:12px 24px;border-radius:8px;cursor:pointer" onclick="limparDados()">🗑️ Limpar Sistema (Reset Total)</button>
+
+            <div id="backupsList">Carregando...</div>
+        </section>
+
+    </main>
+</div>
+
+<!-- ============ MODAL: COMANDA / RESERVA ============ -->
+<div id="modalReserva" class="modal" style="display:none">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitulo">Reserva</h3>
+            <button class="modal-close" onclick="fecharModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="reserva-info" id="reservaInfo"></div>
+            <div id="reservaHospedagem" style="margin:16px 0"></div>
+
+            <h4 style="color:#1b5e20;margin-bottom:10px">🍹 Adicionar à Comanda</h4>
+            <div class="comanda-form">
+                <select id="comandaProduto"><option value="">Carregando produtos...</option></select>
+                <input type="number" id="comandaQtd" value="1" min="1" style="width:80px">
+                <button class="btn btn-primary btn-sm" onclick="addItemComanda()">+ Adicionar</button>
+            </div>
+            <div id="comandaItens" style="margin-top:12px"></div>
+            <div class="comanda-total">Subtotal: <span id="comandaSubtotal">R$ 0,00</span></div>
+
+            <hr style="margin:18px 0">
+            <div class="form-group">
+                <label>Forma de Pagamento</label>
+                <select id="finalForma">
+                    <option value="dinheiro">Dinheiro</option>
+                    <option value="pix">PIX</option>
+                    <option value="cartao">Cartão</option>
+                    <option value="boleto">Boleto</option>
+                </select>
+            </div>
+            <div class="form-row" style="margin-top:12px">
+                <button class="btn btn-primary" onclick="finalizarReserva()">✅ Finalizar e Receber</button>
+                <button class="btn btn-outline" onclick="imprimirComprovante()">🖨️ Comprovante</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ MODAL: EDITAR RESERVA ============ -->
+<div id="modalEditarReserva" class="modal" style="display:none">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✏️ Editar Reserva</h3>
+            <button class="modal-close" onclick="fecharModalEditar()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="erReservaId">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Cliente</label>
+                    <select id="erCliente" disabled></select>
+                </div>
+                <div class="form-group">
+                    <label>Quarto <span class="required">*</span></label>
+                    <select id="erQuarto"></select>
+                </div>
+                <div class="form-group">
+                    <label>Check-in <span class="required">*</span></label>
+                    <input type="date" id="erEntrada">
+                </div>
+                <div class="form-group">
+                    <label>Check-out <span class="required">*</span></label>
+                    <input type="date" id="erSaida">
+                </div>
+            </div>
+            <div class="form-row" style="margin-top:16px">
+                <button class="btn btn-primary" onclick="salvarEdicaoReserva()">💾 Salvar</button>
+                <button class="btn btn-outline" onclick="fecharModalEditar()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/admin.js"></script>
+<script src="js/offline.js"></script>
+<script>
+// Service Worker: remove registros antigos (ex: sw-admin.js) e usa o sw.js principal
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(regs => {
+        regs.forEach(reg => {
+            const sw = reg.active || reg.installing || reg.waiting;
+            const url = sw ? sw.scriptURL : '';
+            if (url && !url.endsWith('/sw.js')) reg.unregister();
+        });
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    }).catch(() => {});
+}
+</script>
+</body>
+</html>
