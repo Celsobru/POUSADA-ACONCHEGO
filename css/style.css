@@ -106,3 +106,12 @@ footer { text-align: center; padding: 25px; background: var(--verde); color: #ff
     .features { grid-template-columns: repeat(2, 1fr); }
     .galeria { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* FAQ */
+.faq { display: grid; gap: 12px; margin-top: 24px; }
+.faq details { background: var(--branco); border: 1px solid #e2e8e3; border-radius: 12px; padding: 14px 18px; box-shadow: 0 2px 8px rgba(0,0,0,.04); }
+.faq summary { cursor: pointer; font-weight: 600; color: var(--verde); }
+.faq summary::marker { color: var(--verde); }
+.faq details[open] summary { margin-bottom: 8px; }
+.faq p { margin: 0; color: var(--cinza); line-height: 1.6; }
+.faq a { color: var(--verde-claro); }

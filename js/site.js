@@ -4,7 +4,7 @@ fetch(BASE + '/api/site/public')
   .then(r => r.json())
   .then(s => {
     if (!s.titulo) return;
-    document.title = s.titulo + ' - Bauru/SP';
+    document.title = (s.titulo || 'Pousada Aconchego') + ' em Bauru/SP | Suítes e Reservas';
     document.querySelector('.logo').innerHTML = '🏡 ' + s.titulo.replace('Pousada ', 'Pousada <span>') + (s.titulo.includes('<') ? '' : '</span>');
     const h = document.querySelector('.hero h1');
     if (h && s.subtitulo) h.innerHTML = s.subtitulo.replace('Bauru', '<span>Bauru</span>');
@@ -53,7 +53,7 @@ fetch(BASE + '/api/site/public')
         if (cards) {
             cards.innerHTML = s.quartos.map(q => `
                 <div class="card">
-                    <div class="card-img">${q.foto ? '<img src="' + q.foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:12px">' : (q.nome.includes('Standard') ? '🛏️' : q.nome.includes('Luxo') ? '🌿' : '👨‍👩‍👧‍👦')}</div>
+                    <div class="card-img">${q.foto ? '<img src="' + q.foto + '" alt="' + (q.nome || 'Quarto da Pousada Aconchego') + '" style="width:100%;height:100%;object-fit:cover;border-radius:12px">' : (q.nome.includes('Standard') ? '🛏️' : q.nome.includes('Luxo') ? '🌿' : '👨‍👩‍👧‍👦')}</div>
                     <h3>${q.nome}</h3>
                     <p>${q.descricao || 'Quarto confortável e aconchegante.'}</p>
                     <span class="preco">a partir de R$ ${q.diaria.toFixed(2).replace('.',',')}<small>/noite</small></span>
@@ -85,7 +85,7 @@ fetch(BASE + '/api/site/public')
                 const isVideo = /\.(mp4|webm|mov)$/i.test(url);
                 return isVideo
                     ? `<video class="g" src="${url}" controls style="width:100%;height:100%;object-fit:cover;border-radius:14px"></video>`
-                    : `<div class="g" style="background:url('${url}') center/cover;font-size:0"></div>`;
+                    : `<div class="g" role="img" aria-label="${(s.titulo || 'Pousada Aconchego')} - foto" style="background:url('${url}') center/cover;font-size:0"></div>`;
             }).join('');
         }
     }

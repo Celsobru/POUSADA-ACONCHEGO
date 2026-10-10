@@ -52,6 +52,152 @@ app.use((req, res, next) => {
     next();
 });
 
+// ---------- SEO (robots.txt, sitemap.xml e <head> dinâmico) ----------
+const SITE_URL = (process.env.SITE_URL || 'https://pousadaaconchegobauru.com.br').replace(/\/+$/, '');
+const INDEX_HTML_PATH = path.join(__dirname, '..', 'index.html');
+
+function escHtml(v) {
+    return String(v == null ? '' : v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// Converte "(14) 99831-3110" ou "5514998313110" em "+5514998313110"
+function telE164(v) {
+    const d = String(v == null ? '' : v).replace(/\D/g, '');
+    if (!d) return '';
+    if (d.startsWith('55') && d.length >= 12) return '+' + d;
+    if (d.length >= 10) return '+55' + d;
+    return '';
+}
+
+function fmtPreco(n) {
+    return (Math.round(n) === n) ? String(n) : n.toFixed(2).replace('.', ',');
+}
+
+// Monta as tags de SEO a partir das configurações salvas no painel
+function buildSeoHead(d) {
+    const site = (d && d.site) || {};
+    const nome = String(site.titulo || 'Pousada Aconchego').trim() || 'Pousada Aconchego';
+    const cidade = 'Bauru';
+    const uf = 'SP';
+    const url = SITE_URL + '/';
+    const tel = telE164(site.telefone);
+    const email = String(site.email || '');
+    const endereco = String(site.endereco || '').trim();
+
+    const quartos = ((d && d.quartos) || []).filter(q => q.ativo);
+    const precos = quartos.map(q => Number(q.diaria) || 0).filter(n => n > 0);
+    const priceRange = precos.length
+        ? 'R$ ' + fmtPreco(Math.min.apply(null, precos)) + ' - R$ ' + fmtPreco(Math.max.apply(null, precos))
+        : '';
+
+    const titulo = nome + ' em ' + cidade + '/' + uf + ' | Pousada, Suítes e Reservas';
+    const descricao = nome + ' em ' + cidade + '/' + uf + ': suítes confortáveis, café da manhã, Wi-Fi grátis e estacionamento. Reserve pelo WhatsApp.';
+
+    // Imagens para redes sociais / dados estruturados (hero, galeria, quartos, ícone)
+    const abs = (f) => /^https?:/i.test(String(f)) ? String(f) : SITE_URL + (String(f).startsWith('/') ? String(f) : '/' + String(f));
+    const listaImg = [];
+    if (site.heroImg) listaImg.push(site.heroImg);
+    if (Array.isArray(site.galeria)) site.galeria.forEach(g => listaImg.push(g && typeof g === 'object' ? (g.url || g.foto) : g));
+    quartos.forEach(q => { if (q.foto) listaImg.push(q.foto); });
+    const imagens = [];
+    listaImg.filter(Boolean).map(abs).forEach(u => { if (imagens.indexOf(u) === -1) imagens.push(u); });
+    if (!imagens.length) imagens.push(SITE_URL + '/icons/icon-512.png');
+    const ogImage = imagens[0];
+    const logoUrl = site.logo ? abs(site.logo) : SITE_URL + '/icons/icon-512.png';
+
+    const addr = { '@type': 'PostalAddress', addressLocality: cidade, addressRegion: uf, addressCountry: 'BR' };
+    if (endereco) addr.streetAddress = endereco;
+
+    const biz = {
+        '@context': 'https://schema.org',
+        '@type': 'LodgingBusiness',
+        name: nome,
+        url: url,
+        description: nome + ' — pousada em ' + cidade + '/' + uf + ' com suítes confortáveis, café da manhã, Wi-Fi grátis e estacionamento.',
+        address: addr,
+        image: imagens,
+        logo: logoUrl,
+        currenciesAccepted: 'BRL',
+        paymentAccepted: 'Dinheiro, Pix, Cartão'
+    };
+    if (tel) biz.telephone = tel;
+    if (email) biz.email = email;
+    if (priceRange) biz.priceRange = priceRange;
+    if (Array.isArray(site.diferenciais) && site.diferenciais.length) {
+        biz.amenityFeature = site.diferenciais
+            .filter(x => x && x.titulo)
+            .map(x => ({ '@type': 'LocationFeatureSpecification', name: String(x.titulo), value: true }));
+    }
+
+    const L = [];
+    L.push('    <title>' + escHtml(titulo) + '</title>');
+    L.push('    <meta name="description" content="' + escHtml(descricao) + '">');
+    L.push('    <link rel="canonical" href="' + url + '">');
+    L.push('    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">');
+    L.push('    <meta name="author" content="' + escHtml(nome) + '">');
+    L.push('    <meta name="geo.region" content="BR-SP">');
+    L.push('    <meta name="geo.placename" content="' + cidade + '">');
+    L.push('    <meta property="og:type" content="business.business">');
+    L.push('    <meta property="og:site_name" content="' + escHtml(nome) + '">');
+    L.push('    <meta property="og:locale" content="pt_BR">');
+    L.push('    <meta property="og:title" content="' + escHtml(nome + ' em ' + cidade + '/' + uf) + '">');
+    L.push('    <meta property="og:description" content="' + escHtml(descricao) + '">');
+    L.push('    <meta property="og:url" content="' + url + '">');
+    L.push('    <meta property="og:image" content="' + escHtml(ogImage) + '">');
+    L.push('    <meta name="twitter:card" content="summary_large_image">');
+    L.push('    <meta name="twitter:title" content="' + escHtml(nome + ' em ' + cidade + '/' + uf) + '">');
+    L.push('    <meta name="twitter:description" content="' + escHtml(descricao) + '">');
+    L.push('    <meta name="twitter:image" content="' + escHtml(ogImage) + '">');
+    L.push('    <link rel="icon" type="image/png" sizes="192x192" href="' + SITE_URL + '/icons/icon-192.png">');
+    L.push('    <link rel="apple-touch-icon" href="' + SITE_URL + '/icons/icon-192.png">');
+    L.push('    <script type="application/ld+json">' + JSON.stringify(biz) + '</script>');
+    return L.join('\n');
+}
+
+app.get('/robots.txt', (req, res) => {
+    res.type('text/plain').send(
+        'User-agent: *\n' +
+        'Allow: /\n' +
+        'Disallow: /admin.html\n' +
+        'Disallow: /login.html\n' +
+        'Disallow: /cliente.html\n' +
+        'Disallow: /server/\n' +
+        'Disallow: /api/\n\n' +
+        'Sitemap: ' + SITE_URL + '/sitemap.xml\n'
+    );
+});
+
+app.get('/sitemap.xml', (req, res) => {
+    const hoje = new Date().toISOString().slice(0, 10);
+    res.type('application/xml').send(
+        '<?xml version="1.0" encoding="UTF-8"?>\n' +
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+        '  <url>\n' +
+        '    <loc>' + SITE_URL + '/</loc>\n' +
+        '    <lastmod>' + hoje + '</lastmod>\n' +
+        '    <changefreq>weekly</changefreq>\n' +
+        '    <priority>1.0</priority>\n' +
+        '  </url>\n' +
+        '</urlset>\n'
+    );
+});
+
+// Página inicial: injeta o <head> de SEO gerado a partir das configurações do painel
+app.get(['/', '/index.html'], (req, res, next) => {
+    fs.readFile(INDEX_HTML_PATH, 'utf8', (err, html) => {
+        if (err) return next();
+        try {
+            const head = buildSeoHead(db.load());
+            html = html.replace(/<!--SEO_HEAD_START-->[\s\S]*?<!--SEO_HEAD_END-->/,
+                '<!--SEO_HEAD_START-->\n' + head + '\n    <!--SEO_HEAD_END-->');
+        } catch (e) { /* mantém o HTML estático em caso de erro */ }
+        res.set('Content-Type', 'text/html; charset=utf-8');
+        res.send(html);
+    });
+});
+
 app.use(express.static(path.join(__dirname, '..')));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
@@ -554,8 +700,8 @@ app.post('/api/admin/limpar-dados', auth, adminOnly, (req, res) => {
             titulo: 'Pousada Aconchego',
             subtitulo: 'Seu refúgio em Bauru',
             descricao: 'Conforto, tranquilidade e hospitalidade de verdade no coração do interior paulista.',
-            telefone: '(14) 99999-9999',
-            whatsapp: '5514999999999',
+            telefone: '(14) 99831-3110',
+            whatsapp: '5514998313110',
             heroImg: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600',
             logo: '',
             sobre: 'Uma pousada aconchegante no coração de Bauru.',
@@ -755,7 +901,7 @@ app.delete('/api/site/secoes/:id', auth, adminOnly, (req, res) => {
 const SITE_PADRAO = {
     titulo: 'Pousada Aconchego', subtitulo: 'Seu refúgio em Bauru',
     descricao: 'Conforto, tranquilidade e hospitalidade de verdade no coração do interior paulista.',
-    telefone: '(14) 99999-9999', whatsapp: '5514999999999',
+    telefone: '(14) 99831-3110', whatsapp: '5514998313110',
     heroImg: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600',
     sobre: 'Uma pousada aconchegante no coração de Bauru.',
     galeria: []
