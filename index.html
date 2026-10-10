@@ -207,7 +207,7 @@
     <script src="js/site.js?v=6"></script>
     <script src="js/offline.js?v=3"></script>
     <script>
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' });
     </script>
 </body>
 </html>

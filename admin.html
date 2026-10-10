@@ -6,8 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel Administrativo - Pousada Aconchego</title>
 <meta name="robots" content="noindex, nofollow">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="css/style.css?v=6">
+<link rel="stylesheet" href="css/admin.css?v=6">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
@@ -778,8 +778,8 @@
     </div>
 </div>
 
-<script src="js/admin.js"></script>
-<script src="js/offline.js"></script>
+<script src="js/admin.js?v=6"></script>
+<script src="js/offline.js?v=6"></script>
 <script>
 // Service Worker: remove registros antigos (ex: sw-admin.js) e usa o sw.js principal
 if ('serviceWorker' in navigator) {
@@ -789,7 +789,7 @@ if ('serviceWorker' in navigator) {
             const url = sw ? sw.scriptURL : '';
             if (url && !url.endsWith('/sw.js')) reg.unregister();
         });
-        navigator.serviceWorker.register('sw.js').catch(() => {});
+        navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
     }).catch(() => {});
 }
 </script>

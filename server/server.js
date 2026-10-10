@@ -207,7 +207,14 @@ app.get(['/', '/index.html'], (req, res, next) => {
     });
 });
 
-app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(path.join(__dirname, '..'), {
+    setHeaders: (res, filePath) => {
+        // HTML/JS/CSS sempre revalidam (evita painel desatualizado no app/PWA)
+        if (/\.(html|js|css)$/i.test(filePath)) {
+            res.setHeader('Cache-Control', 'no-cache, must-revalidate, max-age=0');
+        }
+    }
+}));
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Multer para upload de arquivos (backup restore)
