@@ -16,13 +16,20 @@ let currentReservaData = null;
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('adminName').textContent = user.nome || 'Admin';
     setupSidebar();
+    const isAdmin = user.role === 'admin';
+    const secaoInicial = isAdmin ? 'dashboard' : 'caixa';
     // Funcionário não acessa seções exclusivas do administrador
-    if (user.role !== 'admin') {
-        document.querySelectorAll('[data-section="usuarios"],[data-section="financeiro"],[data-section="config"],[data-section="backup"],[data-section="site-quartos"],[data-section="site-textos"],[data-section="site-diferenciais"],[data-section="site-galeria"],[data-section="site-secoes"]').forEach(el => el.style.display = 'none');
+    if (!isAdmin) {
+        document.querySelectorAll('[data-section="dashboard"],[data-section="usuarios"],[data-section="financeiro"],[data-section="config"],[data-section="backup"],[data-section="site-quartos"],[data-section="site-textos"],[data-section="site-diferenciais"],[data-section="site-galeria"],[data-section="site-secoes"]').forEach(el => el.style.display = 'none');
+        // Funcionário não gerencia o cardápio: apenas lança itens na comanda
+        const produtoAdminBox = document.getElementById('produtoAdminBox');
+        if (produtoAdminBox) produtoAdminBox.style.display = 'none';
     }
     setupEventListeners();
-    showSection('dashboard');
-    carregarDashboard();
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    const navInicial = document.querySelector('[data-section="' + secaoInicial + '"]');
+    if (navInicial) navInicial.classList.add('active');
+    showSection(secaoInicial);
 });
 
 function setupSidebar() {
@@ -599,7 +606,11 @@ async function carregarProdutos() {
     try {
         const produtos = await (await fetch(API + '/produtos')).json();
         const tbody = document.querySelector('#tabelaProdutos tbody');
-        tbody.innerHTML = produtos.filter(p => p.nome && p.preco != null).map(p => '<tr><td>#' + p.id + '</td><td>' + p.nome + '</td><td>' + fmtMoeda(p.preco) + '</td><td><button class="btn btn-sm btn-outline" onclick="editarProduto(' + p.id + ', \'' + p.nome.replace(/'/g, "\\'") + '\', ' + p.preco + ')">Editar</button><button class="btn btn-sm" style="background:#fce4ec;color:#c62828;border:1px solid #c62828" onclick="excluirProduto(' + p.id + ')">Excluir</button></td></tr>').join('') || '<tr><td colspan="4" style="text-align:center">Nenhum produto</td></tr>';
+        const podeGerenciar = user.role === 'admin';
+        const acoesProduto = (p) => podeGerenciar
+            ? '<button class="btn btn-sm btn-outline" onclick="editarProduto(' + p.id + ', \'' + p.nome.replace(/'/g, "\\'") + '\', ' + p.preco + ')">Editar</button><button class="btn btn-sm" style="background:#fce4ec;color:#c62828;border:1px solid #c62828" onclick="excluirProduto(' + p.id + ')">Excluir</button>'
+            : '<span class="small">—</span>';
+        tbody.innerHTML = produtos.filter(p => p.nome && p.preco != null).map(p => '<tr><td>#' + p.id + '</td><td>' + p.nome + '</td><td>' + fmtMoeda(p.preco) + '</td><td>' + acoesProduto(p) + '</td></tr>').join('') || '<tr><td colspan="4" style="text-align:center">Nenhum produto</td></tr>';
     } catch (e) { console.error('Erro produtos:', e); }
 }
 
