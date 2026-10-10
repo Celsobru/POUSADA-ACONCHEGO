@@ -819,7 +819,8 @@ async function carregarSiteQuartos() {
     try {
         const quartos = await (await fetch(API + '/site/quartos', { headers: H })).json();
         const tbody = document.querySelector('#tabelaSiteQuartos tbody');
-        tbody.innerHTML = quartos.map(q => '<tr><td>#' + q.id + '</td><td>' + q.nome + '</td><td>' + fmtMoeda(q.diaria) + '</td><td>' + q.capacidade + '</td><td>' + (q.foto ? '<img src="' + q.foto + '" style="width:60px;height:40px;object-fit:cover;border-radius:4px">' : '-') + '</td><td>' + (q.descricao || '-') + '</td><td><span class="badge badge-' + (q.ativo ? 'ativa' : 'cancelada') + '">' + (q.ativo ? 'Ativo' : 'Inativo') + '</span></td><td><button class="btn btn-sm btn-outline" onclick="editarSiteQuarto(' + q.id + ', \'' + q.nome.replace(/'/g, "\\'") + '\', ' + q.diaria + ', ' + q.capacidade + ', \'' + (q.foto || '').replace(/'/g, "\\'") + '\', \'' + (q.descricao || '').replace(/'/g, "\\'") + '\', ' + q.ativo + ')">Editar</button><button class="btn btn-sm" style="background:#fce4ec;color:#c62828;border:1px solid #c62828" onclick="excluirSiteQuarto(' + q.id + ')">Excluir</button></td></tr>').join('') || '<tr><td colspan="8" style="text-align:center">Nenhum quarto</td></tr>';
+        tbody.innerHTML = quartos.map(q => '<tr><td>#' + q.id + '</td><td>' + q.nome + '</td><td>' + fmtMoeda(q.diaria) + '</td><td>' + q.capacidade + '</td><td>' + (q.foto ? '<img src="' + q.foto + '" style="width:60px;height:40px;object-fit:cover;border-radius:4px">' : '-') + '</td><td>' + (q.descricao || '-') + '</td><td><span class="badge badge-' + (q.ativo ? 'ativa' : 'cancelada') + '">' + (q.ativo ? 'Ativo' : 'Inativo') + '</span></td><td><button class="btn btn-sm btn-outline" onclick="editarSiteQuarto(' + q.id + ', \'' + q.nome.replace(/'/g, "\\'") + '\', ' + q.diaria + ', ' + q.capacidade + ', \'' + (q.foto || '').replace(/'/g, "\\'") + '\', \'' + (q.descricao || '').replace(/'/g, "\\'") + '\', ' + q.ativo + ')">Editar</button><button class="btn btn-sm btn-outline" onclick="escolherFotoQuarto(' + q.id + ')">📷 Foto</button><button class="btn btn-sm" style="background:#fce4ec;color:#c62828;border:1px solid #c62828" onclick="excluirSiteQuarto(' + q.id + ')">Excluir</button></td></tr>').join('') || '<tr><td colspan="8" style="text-align:center">Nenhum quarto</td></tr>';
+        preencherGaleriaQuarto();
     } catch (e) { console.error('Erro site quartos:', e); }
 }
 
@@ -833,7 +834,7 @@ async function addSiteQuarto() {
     if (!nome || isNaN(diaria)) return showMsg('sqMsg', 'Preencha nome e diária', true);
     try {
         const r = await fetch(API + '/site/quartos', { method: 'POST', headers: H, body: JSON.stringify({ nome, diaria, capacidade: cap, foto, descricao: desc, ativo }) });
-        if (r.ok) { showMsg('sqMsg', 'Quarto adicionado!', false); document.getElementById('sqNome').value = ''; document.getElementById('sqDiaria').value = ''; document.getElementById('sqCap').value = ''; document.getElementById('sqFoto').value = ''; document.getElementById('sqDesc').value = ''; carregarSiteQuartos(); carregarQuartos(); carregarNovaReservaForm(); }
+        if (r.ok) { showMsg('sqMsg', 'Quarto adicionado!', false); document.getElementById('sqNome').value = ''; document.getElementById('sqDiaria').value = ''; document.getElementById('sqCap').value = ''; document.getElementById('sqFoto').value = ''; document.getElementById('sqDesc').value = ''; document.getElementById('sqFotoFile').value = ''; mostrarPreviewQuarto(''); carregarSiteQuartos(); carregarQuartos(); carregarNovaReservaForm(); }
         else { const j = await r.json(); showMsg('sqMsg', 'Erro: ' + (j.erro || r.status), true); }
     } catch (e) { showMsg('sqMsg', 'Erro de conexao', true); }
 }
@@ -852,6 +853,73 @@ async function editarSiteQuarto(id, nome, diaria, cap, foto, descParam, ativo) {
 }
 
 async function excluirSiteQuarto(id) { if (!confirm('Excluir este quarto?')) return; try { await fetch(API + '/site/quartos/' + id, { method: 'DELETE', headers: H }); carregarSiteQuartos(); carregarQuartos(); carregarNovaReservaForm(); } catch (e) { alert('Erro'); } }
+
+// ------ Fotos dos quartos (upload do computador ou escolha na galeria) ============
+function mostrarPreviewQuarto(url) {
+    const img = document.getElementById('sqFotoPreview');
+    if (!img) return;
+    if (url) { img.src = url; img.style.display = 'block'; } else { img.removeAttribute('src'); img.style.display = 'none'; }
+}
+
+// Envia a foto escolhida no formulario do novo quarto
+async function uploadFotoQuarto() {
+    const inp = document.getElementById('sqFotoFile');
+    const f = inp.files[0];
+    if (!f) { showMsg('sqMsg', 'Escolha uma imagem primeiro', true); return; }
+    const b64 = await toBase64(f);
+    const r = await fetch(API + '/upload', { method: 'POST', headers: H, body: JSON.stringify({ nome: f.name, base64: b64 }) });
+    const j = await r.json();
+    if (j.url) {
+        document.getElementById('sqFoto').value = j.url;
+        mostrarPreviewQuarto(j.url);
+        showMsg('sqMsg', 'Foto enviada! Agora clique em Adicionar (ou Editar).', false);
+    } else { showMsg('sqMsg', 'Erro no upload da foto', true); }
+}
+
+// Preenche o select "Escolher uma foto da galeria" com as imagens já enviadas
+async function preencherGaleriaQuarto() {
+    try {
+        const s = await (await fetch(API + '/site/public')).json();
+        const sel = document.getElementById('sqFotoGaleria');
+        if (!sel) return;
+        const fotos = (s.galeria || [])
+            .map(u => (typeof u === 'string' ? u : u.url))
+            .filter(u => u && !/\.(mp4|webm|mov)$/i.test(u));
+        sel.innerHTML = '<option value="">— Escolher uma foto da galeria —</option>' +
+            fotos.map(u => '<option value="' + u + '">' + u.split('/').pop() + '</option>').join('');
+    } catch (e) { /* silencioso */ }
+}
+
+// Foto para um quarto já existente (botão na tabela)
+let _sqFotoRowId = null;
+function escolherFotoQuarto(id) {
+    _sqFotoRowId = id;
+    const inp = document.getElementById('sqFotoRowFile');
+    if (!inp) return;
+    inp.value = '';
+    inp.click();
+}
+
+// Handler do upload por linha (registrado uma vez)
+document.addEventListener('DOMContentLoaded', () => {
+    const inp = document.getElementById('sqFotoRowFile');
+    if (!inp) return;
+    inp.addEventListener('change', async () => {
+        const f = inp.files[0];
+        if (!f || !_sqFotoRowId) return;
+        try {
+            const b64 = await toBase64(f);
+            const r = await fetch(API + '/upload', { method: 'POST', headers: H, body: JSON.stringify({ nome: f.name, base64: b64 }) });
+            const j = await r.json();
+            if (j.url) {
+                await fetch(API + '/site/quartos/' + _sqFotoRowId, { method: 'PUT', headers: H, body: JSON.stringify({ foto: j.url }) });
+                carregarSiteQuartos();
+            } else {
+                alert('Erro no upload da foto');
+            }
+        } catch (e) { alert('Erro no upload da foto'); }
+    });
+});
 
 // ============================================
 // SITE - TEXTOS DO SITE

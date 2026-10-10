@@ -108,7 +108,16 @@ function buildSeoHead(d) {
     const logoUrl = site.logo ? abs(site.logo) : SITE_URL + '/icons/icon-512.png';
 
     const addr = { '@type': 'PostalAddress', addressLocality: cidade, addressRegion: uf, addressCountry: 'BR' };
-    if (endereco) addr.streetAddress = endereco;
+    if (endereco) {
+        const mCep = endereco.match(/(\d{5}-?\d{3})/);
+        if (mCep) addr.postalCode = mCep[1].replace(/^(\d{5})(\d{3})$/, '$1-$2');
+        // streetAddress = endereço sem cidade/UF/CEP
+        const rua = endereco
+            .replace(/[,\-]?\s*Bauru\s*[-/]?\s*SP.*$/i, '')
+            .replace(/[,\-]?\s*CEP\s*\d{5}-?\d{3}.*$/i, '')
+            .replace(/\s*[,\-]\s*$/, '').trim();
+        if (rua) addr.streetAddress = rua;
+    }
 
     const biz = {
         '@context': 'https://schema.org',
