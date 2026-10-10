@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const secaoInicial = isAdmin ? 'dashboard' : 'caixa';
     // Funcionário não acessa seções exclusivas do administrador
     if (!isAdmin) {
-        document.querySelectorAll('[data-section="dashboard"],[data-section="usuarios"],[data-section="financeiro"],[data-section="config"],[data-section="backup"],[data-section="site-quartos"],[data-section="site-textos"],[data-section="site-diferenciais"],[data-section="site-galeria"],[data-section="site-secoes"]').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('[data-section="dashboard"],[data-section="clientes"],[data-section="usuarios"],[data-section="financeiro"],[data-section="config"],[data-section="backup"],[data-section="site-quartos"],[data-section="site-textos"],[data-section="site-diferenciais"],[data-section="site-galeria"],[data-section="site-secoes"]').forEach(el => el.style.display = 'none');
         // Funcionário não gerencia o cardápio: apenas lança itens na comanda
         const produtoAdminBox = document.getElementById('produtoAdminBox');
         if (produtoAdminBox) produtoAdminBox.style.display = 'none';
