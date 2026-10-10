@@ -112,6 +112,7 @@
     flex: 1;
     margin-left: 260px;
     min-height: 100vh;
+    min-width: 0;
     display: flex;
     flex-direction: column;
 }
@@ -362,6 +363,9 @@
     margin-bottom: 16px;
 }
 
+/* Impede que itens de grid/flex estourem a largura (ex: input de arquivo) */
+.form-grid > * { min-width: 0; }
+
 .form-group {
     display: flex;
     flex-direction: column;
@@ -385,6 +389,9 @@
     background: #fff;
 }
 
+.form-group input[type="file"],
+.form-row input[type="file"] { max-width: 100%; }
+
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
@@ -398,6 +405,8 @@
     flex-wrap: wrap;
     align-items: flex-end;
 }
+
+.form-row > * { min-width: 0; max-width: 100%; }
 
 .full-width { width: 100%; }
 
