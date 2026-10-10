@@ -441,7 +441,12 @@ function gerarReciboPDF(r) {
         doc.text('Obrigado pela preferência! Volte sempre!', 105, y + 10, { align: 'center' });
         doc.text('Pousada Aconchego - Bauru/SP - WhatsApp (14) 99831-3110', 105, y + 16, { align: 'center' });
 
-        doc.save('recibo-reserva-' + r.id + '.pdf');
+        // Nome do arquivo: inclui o nome do cliente (sem acentos/espaços)
+        const nomeArquivo = String(r.clienteNome || 'hospede')
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
+            .replace(/[^a-zA-Z0-9]+/g, '-')                   // troca espaços/símbolos por -
+            .replace(/^-+|-+$/g, '') || 'hospede';            // tira - das pontas
+        doc.save('recibo-' + nomeArquivo + '-reserva-' + r.id + '.pdf');
     } catch (e) {
         console.error('Erro ao gerar PDF:', e);
         alert('Não foi possível gerar o PDF. Use o botão Comprovante para impressão.');
