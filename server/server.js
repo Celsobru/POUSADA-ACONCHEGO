@@ -41,13 +41,15 @@ app.use((req, res, next) => {
     let p;
     try { p = decodeURIComponent(req.path); } catch (e) { p = req.path; }
     p = p.toLowerCase();
+    if (p === '/robots.txt' || p === '/ads.txt' || p.startsWith('/.well-known/')) return next();
     const bloqueado =
         p.startsWith('/server') ||
         p.startsWith('/backups') ||
+        p.startsWith('/node_modules') ||
         p.startsWith('/.git') ||
         p.includes('/.') ||
-        p.endsWith('.bat') ||
-        /^\/(fix|test|check)[^/]*\.js$/.test(p);
+        /\.(txt|sqlite|sqlite3|db|sql|log|env|bak|old|orig|zip|tar|gz|rar|pem|key|crt|p12|bat|cmd|sh|ps1|yml|yaml|ini|conf|md)$/.test(p) ||
+        /^\/(fix|test|check|debug|scan|audit|dbscan)[^/]*\.js$/.test(p);
     if (bloqueado) return res.status(404).send('Not found');
     next();
 });
