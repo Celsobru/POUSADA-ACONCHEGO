@@ -13,6 +13,15 @@ server/data.json
 server/backups/
 *.log
 
+# ===== Notas/arquivos com credenciais em texto puro =====
+*EMAILS*.txt
+Conta admin*.txt
+SENHAS*.txt
+acesso*.txt
+password*.txt
+"Acesso admin"*.txt
+*credenciais*.txt
+
 # ===== Scripts antigos de correcao/teste (continham senhas) =====
 fix_*.js
 fix*.js

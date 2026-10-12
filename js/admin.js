@@ -4,6 +4,13 @@
    ============================================ */
 
 const API = (location.origin && location.origin.startsWith('http') ? location.origin : 'http://localhost:3010') + '/api';
+
+// Escapa HTML para evitar XSS ao renderizar dados vindos da API
+function escHtml(v) {
+    return String(v == null ? '' : v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
 const token = localStorage.getItem('token');
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 if (!token || !['admin', 'funcionario'].includes(user.role)) location.href = 'login.html';
@@ -171,7 +178,7 @@ async function carregarReservas() {
                     botoes += '<button class="btn btn-sm" style="background:#fce4ec;color:#c62828;border:1px solid #c62828" onclick="excluirReserva(' + r.id + ')">Excluir</button>';
                 }
             }
-            return '<tr><td>#' + r.id + '</td><td>' + r.clienteNome + '</td><td>' + r.quartoNome + '</td><td>' + fmtData(r.entrada) + '</td><td>' + fmtData(r.saida) + '</td><td>' + r.noites + '</td><td>' + fmtMoeda(r.valor) + '</td><td>' + fmtMoeda(adicionaisTotal) + '</td><td><strong>' + fmtMoeda(total) + '</strong></td><td><span class="badge badge-' + r.status + '">' + r.status + '</span></td><td><div class="btn-group">' + botoes + '</div></td></tr>';
+            return '<tr><td>#' + r.id + '</td><td>' + escHtml(r.clienteNome) + '</td><td>' + escHtml(r.quartoNome) + '</td><td>' + fmtData(r.entrada) + '</td><td>' + fmtData(r.saida) + '</td><td>' + r.noites + '</td><td>' + fmtMoeda(r.valor) + '</td><td>' + fmtMoeda(adicionaisTotal) + '</td><td><strong>' + fmtMoeda(total) + '</strong></td><td><span class="badge badge-' + r.status + '">' + r.status + '</span></td><td><div class="btn-group">' + botoes + '</div></td></tr>';
         }).join('') || '<tr><td colspan="11" style="text-align:center">Nenhuma reserva</td></tr>';
     } catch (e) { console.error('Erro reservas:', e); }
 }
@@ -692,7 +699,7 @@ async function carregarClientes() {
         const clientes = await (await fetch(API + '/clientes', { headers: H })).json();
         const tbody = document.querySelector('#tabelaClientes tbody');
         tbody.innerHTML = clientes.map(c =>
-            '<tr><td>#' + c.id + '</td><td>' + c.nome + '</td><td>' + c.email + '</td><td>' + (c.telefone || '-') + '</td><td>' + (c.criadoEm ? fmtDataHora(c.criadoEm) : '-') + '</td>' +
+            '<tr><td>#' + c.id + '</td><td>' + escHtml(c.nome) + '</td><td>' + escHtml(c.email) + '</td><td>' + escHtml(c.telefone || '-') + '</td><td>' + (c.criadoEm ? fmtDataHora(c.criadoEm) : '-') + '</td>' +
             '<td><button class="btn btn-sm btn-outline" onclick="editarCliente(' + c.id + ', \'' + String(c.nome).replace(/'/g, "\\'") + '\', \'' + String(c.email).replace(/'/g, "\\'") + '\', \'' + String(c.telefone || '').replace(/'/g, "\\'") + '\')">Editar</button>' +
             '<button class="btn btn-sm" style="background:#fce4ec;color:#c62828;border:1px solid #c62828" onclick="excluirCliente(' + c.id + ')">Excluir</button></td></tr>'
         ).join('') || '<tr><td colspan="6" style="text-align:center">Nenhum cliente</td></tr>';
@@ -1196,7 +1203,7 @@ async function carregarUsuarios() {
     try {
         const usuarios = await (await fetch(API + '/usuarios', { headers: H })).json();
         const tbody = document.querySelector('#tabelaUsuarios tbody');
-        tbody.innerHTML = usuarios.map(u => '<tr><td>#' + u.id + '</td><td>' + u.nome + '</td><td>' + u.email + '</td><td>' + (u.telefone || '-') + '</td><td><span class="badge badge-' + (u.role === 'admin' ? 'finalizada' : 'ativa') + '">' + u.role + '</span></td><td>' + (u.criadoEm ? fmtData(u.criadoEm) : '-') + '</td><td><button class="btn btn-sm btn-outline" onclick="editarUsuario(' + u.id + ', \'' + u.nome.replace(/'/g, "\\'") + '\', \'' + u.email + '\', \'' + (u.telefone || '') + '\', \'' + u.role + '\')">Editar</button>' + (u.id !== 1 ? '<button class="btn btn-sm" style="background:#fce4ec;color:#c62828;border:1px solid #c62828" onclick="excluirUsuario(' + u.id + ')">Excluir</button>' : '') + '</td></tr>').join('') || '<tr><td colspan="7" style="text-align:center">Nenhum usuário</td></tr>';
+        tbody.innerHTML = usuarios.map(u => '<tr><td>#' + u.id + '</td><td>' + escHtml(u.nome) + '</td><td>' + escHtml(u.email) + '</td><td>' + escHtml(u.telefone || '-') + '</td><td><span class="badge badge-' + (u.role === 'admin' ? 'finalizada' : 'ativa') + '">' + u.role + '</span></td><td>' + (u.criadoEm ? fmtData(u.criadoEm) : '-') + '</td><td><button class="btn btn-sm btn-outline" onclick="editarUsuario(' + u.id + ', \'' + u.nome.replace(/'/g, "\\'") + '\', \'' + u.email + '\', \'' + (u.telefone || '') + '\', \'' + u.role + '\')">Editar</button>' + (u.id !== 1 ? '<button class="btn btn-sm" style="background:#fce4ec;color:#c62828;border:1px solid #c62828" onclick="excluirUsuario(' + u.id + ')">Excluir</button>' : '') + '</td></tr>').join('') || '<tr><td colspan="7" style="text-align:center">Nenhum usuário</td></tr>';
     } catch (e) { console.error('Erro usuarios:', e); }
 }
 

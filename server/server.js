@@ -54,6 +54,22 @@ app.use((req, res, next) => {
     next();
 });
 
+// ---------- Protecao anti-XSS: remove tags de campos de texto simples ----------
+const PLAIN_TEXT_FIELDS = ['nome', 'email', 'telefone', 'telefone2', 'celular', 'cpf', 'cnpj', 'documento', 'titulo', 'subtitulo', 'endereco', 'cidade', 'estado', 'cep', 'legenda', 'tipo', 'forma', 'observacao', 'observacoes', 'mensagem', 'assunto', 'usuario', 'login', 'name', 'phone', 'city'];
+function sanitizePlainFields(obj) {
+    if (!obj || typeof obj !== 'object') return;
+    for (const k of Object.keys(obj)) {
+        if (typeof obj[k] === 'string' && PLAIN_TEXT_FIELDS.includes(k)) {
+            obj[k] = obj[k].replace(/<[^>]*>/g, '').replace(/[<>]/g, '').trim();
+        }
+    }
+}
+app.use((req, res, next) => {
+    sanitizePlainFields(req.body);
+    sanitizePlainFields(req.query);
+    next();
+});
+
 // ---------- SEO (robots.txt, sitemap.xml e <head> dinâmico) ----------
 const SITE_URL = (process.env.SITE_URL || 'https://pousadaaconchegobauru.com.br').replace(/\/+$/, '');
 const INDEX_HTML_PATH = path.join(__dirname, '..', 'index.html');
