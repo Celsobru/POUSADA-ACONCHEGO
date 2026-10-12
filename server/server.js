@@ -245,9 +245,11 @@ const upload = multer({
 (function seedAdmin() {
     const d = db.load();
     if (!d.users.find(u => u.role === 'admin')) {
-        d.users.push({ id: db.nextId(d.users), nome: 'Administradora', email: 'admin@aconchego.com', telefone: '', senha: bcrypt.hashSync('***REMOVED***', 10), role: 'admin' });
+        const seedEmail = process.env.ADMIN_EMAIL || 'admin@aconchego.com';
+        const seedPass = process.env.ADMIN_PASSWORD || require('crypto').randomBytes(12).toString('base64url');
+        d.users.push({ id: db.nextId(d.users), nome: 'Administradora', email: seedEmail, telefone: '', senha: bcrypt.hashSync(seedPass, 10), role: 'admin' });
         db.save(d);
-        console.log('Admin criado: admin@aconchego.com / ***REMOVED***');
+        console.log('[seed] Admin criado: ' + seedEmail + (process.env.ADMIN_PASSWORD ? ' (senha do .env)' : ' | SENHA GERADA: ' + seedPass));
     }
 })();
 

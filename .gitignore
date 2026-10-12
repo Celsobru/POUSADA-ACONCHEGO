@@ -19,7 +19,7 @@ Conta admin*.txt
 SENHAS*.txt
 acesso*.txt
 password*.txt
-"Acesso admin"*.txt
+*Acesso*admin*.txt
 *credenciais*.txt
 
 # ===== Scripts antigos de correcao/teste (continham senhas) =====

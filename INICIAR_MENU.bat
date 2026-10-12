@@ -89,8 +89,7 @@ echo    Admin:  http://%IP%:3010/admin.html
 echo    Site:   http://%IP%:3010/
 echo.
 echo  Logins:
-echo    Admin:    admin@aconchego.com / ***REMOVED***
-echo    Func.:    ***REMOVED***    / 123456
+echo    Consulte o administrador do sistema (credenciais nao ficam no repositorio)
 echo  ============================================
 pause
 goto MENU
